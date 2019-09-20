@@ -1,0 +1,129 @@
+---
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+---
+setwd("C:/R programs great lakes/smdm")
+getwd()
+install.packages('ggplot2')
+install.packages('lattice')
+install.packages('readr')
+library(readr)
+library(lattice)
+library(rpivotTable)
+library(ggplot2)
+
+
+
+####Importing the dataset
+Mcdonald = read.csv("Mcdonald  (1).csv",header = TRUE)
+dim(Mcdonald)
+summary(Mcdonald)
+str(Mcdonald)
+attach(Mcdonald)
+Mcdonald2 = Mcdonald[,4:24]
+
+histogram(~Mcdonald[,5]|factor(Mcdonald[,2]))
+
+
+### 1. Plot graphically which food categories have the highest and lowest varieties. ##########
+catplottable = table(Category)
+catplottable
+catplottable = as.data.frame(catplottable)
+qplot(Category,data = Mcdonald,xlab = "Category",ylab ="Frequency",fill = Category,main = "Frequency of Food Categories")
+
+
+
+#### 2. Which all variables have an outlier?  ################
+
+## Creating a function outlier2() for finding Outliers in variable given the column number
+outlier2 = function(i)
+{
+  IQ = IQR(Mcdonald2[,i])
+  z = quantile(Mcdonald2[,i])
+  z= as.data.frame(z)
+  colnames(z) = as.factor(colnames(z))
+  q1 = z[2,1]
+  q3 = z[4,1]
+  
+  
+  subset1 = Mcdonald2[Mcdonald2[,i] < q1 - 1.5*IQ,]
+  lo = nrow(subset1)
+  subset2 = Mcdonald2[Mcdonald2[,i] > q3 + 1.5*IQ,]
+  hi = nrow(subset2)
+  Outliers = lo + hi
+  Outliers = as.numeric(Outliers)
+  Outliers
+}
+
+##Creating a function outlier2() for printing the column names of the variable given the column number
+outcol = function(j){
+  k = colnames(Mcdonald2[j])
+  k
+}
+
+## Creating a FOR loop to test Outliers for all the variables from "Mcdonald2"
+## And giving out the number of Outliers and Column name as the output
+t = for (i in c(1:21)){ 
+  if (outlier2(i) > 0){
+    y = c(outlier2(i),outcol(i))
+    print(outcol(i))
+    print(outlier2(i))
+  }
+}
+
+
+### 3. Which variables have the Highest correlation. Plot them and find out the value ? ########
+
+cor_result = cor(Mcdonald2)
+cor_result = as.data.frame(cor_result)
+
+cor_result1 = cor_result[cor_result[] > 0.& cor_result[] < 1]
+t = max(cor_result1)
+t
+which(cor_result[] == t,arr.ind = TRUE,useNames = TRUE)
+
+cor(Mcdonald2$Sodium,Mcdonald2$Sodium....Daily.Value.)
+
+qplot(Sodium,Sodium....Daily.Value.,data = Mcdonald)
+
+
+### 4. Which category contributes to the maximum % of Cholesterol in a diet (% daily value)? ##############
+t = table(Mcdonald$Cholesterol....Daily.Value.,Mcdonald$Category)
+Catchol = colSums(prop.table(t,2))
+Catchol
+qplot(Cholesterol....Daily.Value.,fill = Category,data = Mcdonald,geom = "density")
+rpivotTable(Mcdonald)
+
+
+cholcolnum = which(colnames(Mcdonald) == "Cholesterol....Daily.Value.")
+mcdchol = Mcdonald[order(Mcdonald$Cholesterol....Daily.Value.),]
+tailcat = tail(mcdchol$Category,9)
+tailchol = tail(mcdchol$Cholesterol....Daily.Value.,9)
+tailchol
+cholcattable = table(tailcat)
+cholcattable
+
+### 5.Which item contributes maximum to the Sodium intake?  ##############
+z = max(Mcdonald$Sodium)
+x = which(Mcdonald$Sodium[] == z)
+Mcdonald[x,1]
+z
+
+
+
+#### 6.Which 4 food items contains the most amount of Saturated Fat? ###########
+mcdor = Mcdonald[order(Mcdonald$Saturated.Fat),]
+top4fats = tail(mcdor[,2],4)
+top4fats
+
+
+
+### plotting some graphs for marks ############
+qplot(Category,data = Mcdonald,xlab = "Category",ylab ="Frequency",fill = Category,main = "Frequency of Food Categories")
+qplot(Category,data = Mcdonald,xlab = "Category",ylab = "Frequency",fill = Category,main = "Frequenct of Food Categories",geom = 'density')
+qplot(Category,Calories,data = Mcdonald,xlab = "Category",ylab = "Calories",fill = Category,main = "Frequency of Food Categories",geom = 'boxplot')
+
+
+
